@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import {
   Container, Button, Typography, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow,
-  Paper, IconButton
+  Paper, IconButton,
+  Box
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -84,57 +85,81 @@ export default function App() {
   };
 
   return (
-   
-    <Container sx={{ mt: 4 }}>
-       {loading && <LoadingIndicator/>}
-      <Typography variant="h4" gutterBottom>Task Manager</Typography>
-      <Button
-        variant="contained"
-        startIcon={<AddIcon />}
-        onClick={() => { setEditingTask(null); setOpenForm(true); }}
-        sx={{ mb: 2 }}
+  <Container sx={{ mt: 4, position: "relative" }}>
+    {loading && (
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          zIndex: 9999,
+          background: "rgba(255,255,255,0.7)",
+          borderRadius: "8px",
+          p: 2
+        }}
       >
-        Add Task
-      </Button>
+        <LoadingIndicator />
+      </Box>
+    )}
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Title</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Deadline</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
+    <Typography variant="h4" gutterBottom>
+      Task Manager
+    </Typography>
+    <Button
+      variant="contained"
+      startIcon={<AddIcon />}
+      onClick={() => { setEditingTask(null); setOpenForm(true); }}
+      sx={{ mb: 2 }}
+    >
+      Add Task
+    </Button>
+
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Title</TableCell>
+            <TableCell>Description</TableCell>
+            <TableCell>Deadline</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {tasks.map(task => (
+            <TableRow key={task._id}>
+              <TableCell>{task.title}</TableCell>
+              <TableCell>{task.description}</TableCell>
+              <TableCell>{format(new Date(task.deadline), "yyyy-MM-dd")}</TableCell>
+              <TableCell>{getDisplayStatus(task)}</TableCell>
+              <TableCell>
+                <IconButton color="success" onClick={() => handleMarkDone(task)}><DoneIcon /></IconButton>
+                {task.linkedFile && (
+                  <IconButton component="a" href={`${API.defaults.baseURL}/tasks/${task._id}/file`}>
+                    <DownloadIcon />
+                  </IconButton>
+                )}
+                <IconButton color="primary" onClick={() => { setEditingTask(task); setOpenForm(true); }}>
+                  <EditIcon />
+                </IconButton>
+                <IconButton color="error" onClick={() => handleDelete(task._id)}>
+                  <DeleteIcon />
+                </IconButton>
+              </TableCell>
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {tasks.map(task => (
-              <TableRow key={task._id}>
-                <TableCell>{task.title}</TableCell>
-                <TableCell>{task.description}</TableCell>
-                <TableCell>{format(new Date(task.deadline), "yyyy-MM-dd")}</TableCell>
-                <TableCell>{getDisplayStatus(task)}</TableCell>
-                <TableCell>
-                  <IconButton color="success" onClick={() => handleMarkDone(task)}><DoneIcon /></IconButton>
-                  {task.linkedFile && (
-                    <IconButton component="a" href={`${API.defaults.baseURL}/tasks/${task._id}/file`}><DownloadIcon /></IconButton>
-                  )}
-                  <IconButton color="primary" onClick={() => { setEditingTask(task); setOpenForm(true); }}><EditIcon /></IconButton>
-                  <IconButton color="error" onClick={() => handleDelete(task._id)}><DeleteIcon /></IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
 
-      <TaskFormDialog
-        open={openForm}
-        onClose={() => setOpenForm(false)}
-        onSave={handleSave}
-        initialData={editingTask}
-      />
-    </Container>
-  );
+    <TaskFormDialog
+      open={openForm}
+      onClose={() => setOpenForm(false)}
+      onSave={handleSave}
+      initialData={editingTask}
+    />
+  </Container>
+);
+
 }
